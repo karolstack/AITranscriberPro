@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Transcriber Pro | Transcripción Real con IA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: { primary: '#6366f1' }
+        }
+      }
+    };
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    @media print {
+      body * { visibility: hidden; }
+      #printable-area, #printable-area * { visibility: visible; }
+      #printable-area { position: absolute; left: 0; top: 0; width: 100%; color: #000 !important; background: #fff !important; }
+    }
+  </style>
+</head>
+<body class="bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 antialiased selection:bg-indigo-500/30 min-h-screen flex flex-col">
+
+  <!-- NAVBAR -->
+  <header class="sticky top-0 z-40 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+          <i data-lucide="audio-waveform" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <span class="font-semibold text-base tracking-tight">
+            AI Transcriber <span class="text-indigo-500">Pro</span>
+          </span>
+          <span id="engine-badge" class="hidden sm:inline-block ml-2 text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+            IA CONECTADA
+          </span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2.5">
+        <button onclick="toggleGuideBanner()" title="Ver guía de configuración" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-300 transition">
+          <i data-lucide="help-circle" class="w-3.5 h-3.5 text-indigo-500"></i>
+          <span>¿Cómo funciona?</span>
+        </button>
+        <button onclick="toggleApiModal(true)" id="api-key-btn" class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border border-indigo-500/40 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 transition">
+          <i data-lucide="key" class="w-3.5 h-3.5"></i>
+          <span id="api-btn-label">Configurar API Key</span>
+        </button>
+        <button id="theme-toggle" aria-label="Cambiar tema" class="p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-300 transition">
+          <i id="theme-icon" data-lucide="sun" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE -->
+  <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 flex-1">
+
+    <!-- GUÍA INTERACTIVA DE INICIO RÁPIDO (BYOK) -->
+    <section id="onboarding-guide" class="mb-6 rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-500/10 via-white to-white dark:from-indigo-500/10 dark:via-zinc-900/90 dark:to-zinc-900/90 p-6 shadow-sm relative">
+      <button onclick="dismissGuideBanner()" title="Ocultar guía" class="absolute top-4 right-4 p-1.5 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-200/50 dark:hover:bg-zinc-800 transition">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-zinc-200/80 dark:border-zinc-800">
+        <div class="flex items-start gap-3">
+          <div class="p-2.5 rounded-xl bg-indigo-600 text-white shrink-0 mt-0.5">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h2 class="text-sm sm:text-base font-bold text-zinc-900 dark:text-white">
+              Guía Rápida: Activa el motor de Inteligencia Artificial en 1 minuto
+            </h2>
+            <p class="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">
+              Esta aplicación procesa audios directamente desde tu navegador usando la tecnología <strong>Whisper Large-v3</strong>. Para empezar, conecta tu propia llave gratuita (API Key):
+            </p>
+          </div>
+        </div>
+        <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium shadow-md shadow-indigo-600/20 transition shrink-0">
+          <span>Obtener API Key Gratis (Groq)</span>
+          <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-4">
+        <div class="p-3.5 rounded-xl bg-white/80 dark:bg-zinc-950/70 border border-zinc-200/80 dark:border-zinc-800 space-y-1">
+          <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-indigo-500/15 text-indigo-500 text-[11px] font-bold">1</span>
+          <h3 class="text-xs font-semibold">Crea tu cuenta gratuita</h3>
+          <p class="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+            Entra a <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" class="text-indigo-500 underline">console.groq.com</a> e inicia sesión con Google o tu correo electrónico (no pide tarjeta).
+          </p>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-white/80 dark:bg-zinc-950/70 border border-zinc-200/80 dark:border-zinc-800 space-y-1">
+          <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-indigo-500/15 text-indigo-500 text-[11px] font-bold">2</span>
+          <h3 class="text-xs font-semibold">Genera tu API Key</h3>
+          <p class="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+            Haz clic en <strong>"Create API Key"</strong>, escribe un nombre cualquiera y copia el código que empieza por <code class="font-mono text-indigo-500">gsk_...</code>
+          </p>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-white/80 dark:bg-zinc-950/70 border border-zinc-200/80 dark:border-zinc-800 space-y-1">
+          <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-indigo-500/15 text-indigo-500 text-[11px] font-bold">3</span>
+          <h3 class="text-xs font-semibold">Pégala aquí</h3>
+          <p class="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+            Pulsa el botón <button onclick="toggleApiModal(true)" class="text-indigo-500 font-semibold underline">Configurar API Key</button> arriba a la derecha, pega tu código y guarda.
+          </p>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-white/80 dark:bg-zinc-950/70 border border-zinc-200/80 dark:border-zinc-800 space-y-1">
+          <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/15 text-emerald-500 text-[11px] font-bold">4</span>
+          <h3 class="text-xs font-semibold flex items-center gap-1">
+            <span>100% Privado y Seguro</span>
+            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-500"></i>
+          </h3>
+          <p class="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+            Tu clave se almacena solo en tu dispositivo (<code>localStorage</code>). Nadie más tiene acceso a ella ni a tus audios.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <div id="global-alert" class="hidden mb-6 flex items-center justify-between p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-sm text-red-500">
+      <div class="flex items-center gap-2">
+        <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
+        <span id="global-alert-text"></span>
+      </div>
+      <button onclick="hideAlert()"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <!-- COLUMNA PRINCIPAL -->
+      <div class="lg:col-span-8 xl:col-span-9 space-y-6">
+
+        <!-- 1. UPLOADER -->
+        <section class="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-6 shadow-sm">
+          <div id="drop-zone" class="cursor-pointer rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-indigo-500 hover:bg-zinc-50 dark:hover:bg-zinc-900 p-8 text-center transition-all">
+            <input id="audio-input" type="file" accept=".mp3,.wav,.flac,.m4a,.aac,.ogg,audio/*" class="hidden" />
+            <div class="mx-auto w-12 h-12 rounded-full bg-indigo-500/10 text-indigo-500 flex items-center justify-center mb-3">
+              <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+            </div>
+            <p class="text-sm font-medium">Arrastra tu archivo de audio aquí o haz clic para seleccionar</p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+              MP3, WAV, FLAC, M4A, AAC, OGG • Soporta audios de hasta 2 horas (fragmentación automática inteligente)
+            </p>
+          </div>
+
+          <div id="file-preview" class="hidden mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="p-2.5 rounded-lg bg-indigo-500/10 text-indigo-500 shrink-0">
+                <i data-lucide="file-audio" class="w-5 h-5"></i>
+              </div>
+              <div class="min-w-0">
+                <p id="file-name" class="text-sm font-medium truncate"></p>
+                <div class="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                  <span id="file-size"></span>
+                  <span id="file-duration"></span>
+                </div>
+              </div>
+            </div>
+            <button id="start-btn" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium shadow-md shadow-indigo-600/20 transition shrink-0">
+              <i data-lucide="sparkles" class="w-4 h-4"></i>
+              <span id="start-btn-text">Transcribir Audio Real</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- 2. OPCIONES -->
+        <section class="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-6 shadow-sm space-y-5">
+          <div class="flex items-center gap-2 text-sm font-semibold">
+            <i data-lucide="sliders" class="w-4 h-4 text-indigo-500"></i>
+            <span>Configuración de IA</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="flex items-center gap-3 p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 hover:bg-zinc-50 dark:hover:bg-zinc-900 cursor-pointer transition">
+              <input id="opt-timestamps" type="checkbox" checked class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
+              <span class="text-xs font-medium">Mostrar timestamps</span>
+            </label>
+            <label class="flex items-center gap-3 p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 hover:bg-zinc-50 dark:hover:bg-zinc-900 cursor-pointer transition">
+              <input id="opt-speakers" type="checkbox" checked class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
+              <span class="text-xs font-medium">Separar intervenciones por pausas</span>
+            </label>
+            <label class="flex items-center gap-3 p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 hover:bg-zinc-50 dark:hover:bg-zinc-900 cursor-pointer transition">
+              <input id="opt-summary" type="checkbox" checked class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
+              <span class="text-xs font-medium">Generar resumen ejecutivo con IA</span>
+            </label>
+            <div class="flex items-center gap-2 p-2 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80">
+              <span class="text-xs font-medium pl-1 shrink-0">Idioma:</span>
+              <select id="opt-lang-select" class="w-full bg-transparent text-xs font-medium focus:outline-none">
+                <option value="" class="dark:bg-zinc-900">Detectar automáticamente</option>
+                <option value="es" class="dark:bg-zinc-900">Español (ES)</option>
+                <option value="en" class="dark:bg-zinc-900">Inglés (EN)</option>
+                <option value="pt" class="dark:bg-zinc-900">Portugués (PT)</option>
+                <option value="fr" class="dark:bg-zinc-900">Francés (FR)</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. BARRA DE PROGRESO REAL -->
+        <section id="progress-panel" class="hidden rounded-2xl border border-indigo-500/30 bg-indigo-500/5 p-5 space-y-3">
+          <div class="flex items-center justify-between text-sm">
+            <div class="flex items-center gap-2 font-medium text-indigo-600 dark:text-indigo-400">
+              <i id="progress-spinner" data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>
+              <span id="progress-label">Preparando audio...</span>
+            </div>
+            <span id="progress-pct" class="font-mono text-xs font-semibold text-indigo-600 dark:text-indigo-400">0%</span>
+          </div>
+          <div class="w-full h-2.5 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+            <div id="progress-bar" class="h-full bg-indigo-600 transition-all duration-300 ease-out rounded-full" style="width: 0%"></div>
+          </div>
+          <div id="progress-ascii" class="font-mono text-[11px] text-zinc-500 dark:text-zinc-400 tracking-wider">
+            ░░░░░░░░░░░░░░░░░░░░ 0%
+          </div>
+        </section>
+
+        <!-- 4. RESULTADOS -->
+        <div id="results-container" class="hidden space-y-6 pt-2">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 id="result-title" class="text-lg font-bold"></h2>
+              <p id="result-subtitle" class="text-xs text-zinc-500"></p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="copyTranscript()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-medium hover:opacity-90 transition">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                <span id="copy-btn-text">Copiar texto</span>
+              </button>
+              <button onclick="exportData('txt')" class="px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-indigo-500 text-xs font-medium transition">TXT</button>
+              <button onclick="exportData('json')" class="px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-indigo-500 text-xs font-medium transition">JSON</button>
+              <button onclick="exportData('srt')" class="px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-indigo-500 text-xs font-medium transition">SRT</button>
+              <button onclick="exportData('vtt')" class="px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-indigo-500 text-xs font-medium transition">VTT</button>
+              <button onclick="exportData('docx')" class="px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-indigo-500 text-xs font-medium transition">DOCX</button>
+              <button onclick="window.print()" class="px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-indigo-500 text-xs font-medium transition">PDF</button>
+            </div>
+          </div>
+
+          <div id="stats-grid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3"></div>
+
+          <div id="speakers-box" class="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2 text-sm font-semibold">
+                <i data-lucide="users" class="w-4 h-4 text-indigo-500"></i>
+                <span>Renombrar Hablantes</span>
+              </div>
+              <button onclick="applySpeakerNames()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition">
+                <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                <span>Aplicar nombres</span>
+              </button>
+            </div>
+            <div id="speakers-inputs" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+          </div>
+
+          <div id="summary-box" class="hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-6 space-y-5">
+            <div class="flex items-center gap-2 text-sm font-semibold">
+              <i data-lucide="sparkles" class="w-4 h-4 text-indigo-500"></i>
+              <span>Resumen Ejecutivo IA</span>
+            </div>
+            <p id="exec-summary" class="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-950 p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80"></p>
+            <div id="summary-cards" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+          </div>
+
+          <div id="printable-area" class="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-6 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h3 id="segments-count" class="text-sm font-semibold">Transcripción</h3>
+              <div class="relative w-full sm:w-64">
+                <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"></i>
+                <input id="search-input" type="text" oninput="renderSegments()" placeholder="Buscar palabra o hablante..." class="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 focus:outline-none focus:border-indigo-500" />
+              </div>
+            </div>
+            <div id="segments-list" class="max-h-[540px] overflow-y-auto pr-2 space-y-4 divide-y divide-zinc-200 dark:divide-zinc-800"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HISTORIAL -->
+      <aside class="lg:col-span-4 xl:col-span-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2 text-sm font-semibold">
+            <i data-lucide="history" class="w-4 h-4 text-indigo-500"></i>
+            <span>Historial Guardado</span>
+          </div>
+        </div>
+        <div id="history-list" class="space-y-2.5 max-h-[680px] overflow-y-auto pr-1"></div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- MODAL DE CONFIGURACIÓN API KEY CON GUÍA INTEGRADA -->
+  <div id="api-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-lg rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-7 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold">Conectar Motor de IA Real</h3>
+        <button onclick="toggleApiModal(false)"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <!-- Mini-guía dentro del modal -->
+      <div class="p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400">¿No tienes una API Key? Consíguela gratis:</span>
+          <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+            <span>Abrir Groq Console</span>
+            <i data-lucide="external-link" class="w-3 h-3"></i>
+          </a>
+        </div>
+        <ol class="text-xs text-zinc-600 dark:text-zinc-300 space-y-1 list-decimal pl-4">
+          <li>Inicia sesión gratis en <strong>console.groq.com</strong> (con Google o correo).</li>
+          <li>Ve a la pestaña <strong>API Keys</strong> en el menú lateral y pulsa <strong>Create API Key</strong>.</li>
+          <li>Copia el código generado (empieza por <code class="font-mono">gsk_</code>) y pégalo abajo.</li>
+        </ol>
+      </div>
+
+      <form id="api-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium mb-1">Proveedor de IA</label>
+          <select id="provider-select" class="w-full px-3.5 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-transparent text-sm focus:outline-none focus:border-indigo-500">
+            <option value="groq" class="dark:bg-zinc-900">Groq Cloud (Whisper Large-v3 - Gratis y Ultra Rápido)</option>
+            <option value="openai" class="dark:bg-zinc-900">OpenAI (Whisper-1 + GPT-4o-mini)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium mb-1">API Key (gsk_... o sk-...)</label>
+          <input id="api-key-input" type="password" required placeholder="Pega aquí tu API Key..." class="w-full px-3.5 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-transparent text-sm focus:outline-none focus:border-indigo-500" />
+        </div>
+        <div class="flex items-center justify-between gap-3 pt-1">
+          <button type="button" onclick="removeApiKey()" class="text-xs text-red-500 hover:underline">
+            Borrar clave guardada
+          </button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium transition">
+            Guardar y Activar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let selectedFile = null;
+    let selectedFileDuration = 0;
+    let currentRecord = null;
+    let historyRecords = JSON.parse(localStorage.getItem('ai_transcriber_real_history') || '[]');
+
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      updateApiStatusUI();
+      renderHistory();
+      if (historyRecords.length > 0) openRecord(historyRecords[0].id);
+    });
+
+    // === GESTIÓN DE API KEY Y GUÍA ===
+    function updateApiStatusUI() {
+      const key = localStorage.getItem('ai_transcriber_apikey');
+      const provider = localStorage.getItem('ai_transcriber_provider') || 'groq';
+      const badge = document.getElementById('engine-badge');
+      const btnLabel = document.getElementById('api-btn-label');
+      const guide = document.getElementById('onboarding-guide');
+      const dismissed = localStorage.getItem('ai_transcriber_guide_dismissed') === 'true';
+
+      if (key) {
+        badge.classList.remove('hidden');
+        badge.textContent = `${provider.toUpperCase()} WHISPER LARGE-V3`;
+        btnLabel.textContent = 'API Key Activa';
+        document.getElementById('api-key-input').value = key;
+        document.getElementById('provider-select').value = provider;
+        guide.classList.add('hidden');
+      } else {
+        badge.classList.add('hidden');
+        btnLabel.textContent = 'Configurar API Key';
+        document.getElementById('api-key-input').value = '';
+        if (!dismissed) guide.classList.remove('hidden');
+      }
+    }
+
+    function dismissGuideBanner() {
+      document.getElementById('onboarding-guide').classList.add('hidden');
+      localStorage.setItem('ai_transcriber_guide_dismissed', 'true');
+    }
+
+    function toggleGuideBanner() {
+      const guide = document.getElementById('onboarding-guide');
+      guide.classList.toggle('hidden');
+    }
+
+    function toggleApiModal(show) {
+      document.getElementById('api-modal').classList.toggle('hidden', !show);
+    }
+
+    function removeApiKey() {
+      localStorage.removeItem('ai_transcriber_apikey');
+      localStorage.removeItem('ai_transcriber_guide_dismissed');
+      updateApiStatusUI();
+      toggleApiModal(false);
+    }
+
+    document.getElementById('api-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const provider = document.getElementById('provider-select').value;
+      const key = document.getElementById('api-key-input').value.trim();
+      localStorage.setItem('ai_transcriber_provider', provider);
+      localStorage.setItem('ai_transcriber_apikey', key);
+      updateApiStatusUI();
+      toggleApiModal(false);
+    });
+
+    // === TEMA ===
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const isDark = document.documentElement.classList.toggle('dark');
+      document.getElementById('theme-icon').setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+      lucide.createIcons();
+    });
+
+    // === SELECCIÓN DE AUDIO ===
+    const dropZone = document.getElementById('drop-zone');
+    const audioInput = document.getElementById('audio-input');
+    dropZone.addEventListener('click', () => audioInput.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-indigo-500'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-indigo-500'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-indigo-500');
+      if (e.dataTransfer.files[0]) handleFileSelection(e.dataTransfer.files[0]);
+    });
+    audioInput.addEventListener('change', (e) => {
+      if (e.target.files[0]) handleFileSelection(e.target.files[0]);
+    });
+
+    function handleFileSelection(file) {
+      hideAlert();
+      const allowed = ['.mp3', '.wav', '.flac', '.m4a', '.aac', '.ogg', '.webm', '.mp4'];
+      const ext = '.' + (file.name.split('.').pop() || '').toLowerCase();
+      if (!allowed.includes(ext)) {
+        showAlert(`Formato no válido (${ext}). Permitidos: ${allowed.join(', ')}`);
+        return;
+      }
+      if (file.size > 1024 * 1024 * 1024) {
+        showAlert('El archivo supera el límite de 1 GB.');
+        return;
+      }
+
+      const url = URL.createObjectURL(file);
+      const audio = new Audio(url);
+      audio.onloadedmetadata = () => {
+        const dur = audio.duration;
+        URL.revokeObjectURL(url);
+        if (dur > 7200) {
+          showAlert('El audio supera el máximo de 2 horas.');
+          return;
+        }
+        selectedFile = file;
+        selectedFileDuration = dur;
+        document.getElementById('file-name').textContent = file.name;
+        document.getElementById('file-size').textContent = `Tamaño: ${formatBytes(file.size)}`;
+        document.getElementById('file-duration').textContent = `• Duración: ${formatDuration(dur)}`;
+        document.getElementById('file-preview').classList.remove('hidden');
+      };
+      audio.onerror = () => {
+        URL.revokeObjectURL(url);
+        selectedFile = file;
+        selectedFileDuration = 0;
+        document.getElementById('file-name').textContent = file.name;
+        document.getElementById('file-size').textContent = `Tamaño: ${formatBytes(file.size)}`;
+        document.getElementById('file-duration').textContent = '';
+        document.getElementById('file-preview').classList.remove('hidden');
+      };
+    }
+
+    // === CODIFICADOR WAV MONO 16KHZ ===
+    function encodeWav16kMono(audioBuffer, startSample, endSample) {
+      const length = endSample - startSample;
+      const buffer = new ArrayBuffer(44 + length * 2);
+      const view = new DataView(buffer);
+
+      const writeString = (offset, str) => {
+        for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+      };
+
+      writeString(0, 'RIFF');
+      view.setUint32(4, 36 + length * 2, true);
+      writeString(8, 'WAVE');
+      writeString(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, 16000, true);
+      view.setUint32(28, 32000, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeString(36, 'data');
+      view.setUint32(40, length * 2, true);
+
+      const channelData = audioBuffer.getChannelData(0);
+      let offset = 44;
+      for (let i = startSample; i < endSample; i++, offset += 2) {
+        const s = Math.max(-1, Math.min(1, channelData[i]));
+        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      }
+      return new Blob([buffer], { type: 'audio/wav' });
+    }
+
+    // === TRANSCRIPCIÓN REAL ===
+    document.getElementById('start-btn').addEventListener('click', async () => {
+      const apiKey = localStorage.getItem('ai_transcriber_apikey');
+      const provider = localStorage.getItem('ai_transcriber_provider') || 'groq';
+
+      if (!apiKey) {
+        toggleApiModal(true);
+        return;
+      }
+      if (!selectedFile) return;
+
+      hideAlert();
+      const startBtn = document.getElementById('start-btn');
+      const progressPanel = document.getElementById('progress-panel');
+      startBtn.disabled = true;
+      document.getElementById('start-btn-text').textContent = 'Procesando IA...';
+      progressPanel.classList.remove('hidden');
+
+      const t0 = performance.now();
+
+      try {
+        updateProgress(10, 'Decodificando pista de audio en el navegador...');
+        const arrayBuffer = await selectedFile.arrayBuffer();
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+        const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        const totalDuration = audioBuffer.duration;
+        selectedFileDuration = totalDuration;
+
+        const chunkSeconds = 600;
+        const sampleRate = 16000;
+        const totalSamples = audioBuffer.length;
+        const samplesPerChunk = chunkSeconds * sampleRate;
+        const totalChunks = Math.ceil(totalSamples / samplesPerChunk);
+
+        const endpoint = provider === 'groq'
+          ? 'https://api.groq.com/openai/v1/audio/transcriptions'
+          : 'https://api.openai.com/v1/audio/transcriptions';
+        const modelName = provider === 'groq' ? 'whisper-large-v3' : 'whisper-1';
+
+        const langChoice = document.getElementById('opt-lang-select').value;
+        let allSegments = [];
+        let detectedLang = langChoice || 'es';
+
+        for (let c = 0; c < totalChunks; c++) {
+          const startSample = c * samplesPerChunk;
+          const endSample = Math.min(totalSamples, (c + 1) * samplesPerChunk);
+          const timeOffset = c * chunkSeconds;
+
+          const basePct = 15 + Math.round((c / totalChunks) * 65);
+          updateProgress(basePct, `Transcribiendo bloque ${c + 1} de ${totalChunks} con ${modelName}...`);
+
+          const wavBlob = encodeWav16kMono(audioBuffer, startSample, endSample);
+          const formData = new FormData();
+          formData.append('file', wavBlob, `chunk_${c}.wav`);
+          formData.append('model', modelName);
+          formData.append('response_format', 'verbose_json');
+          if (langChoice) formData.append('language', langChoice);
+
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${apiKey}` },
+            body: formData
+          });
+
+          if (!res.ok) {
+            const errJson = await res.json().catch(() => ({}));
+            throw new Error(errJson.error?.message || `Error HTTP ${res.status} en la API de transcripción.`);
+          }
+
+          const data = await res.json();
+          if (data.language) detectedLang = data.language;
+
+          if (Array.isArray(data.segments)) {
+            data.segments.forEach(seg => {
+              allSegments.push({
+                startSec: seg.start + timeOffset,
+                endSec: seg.end + timeOffset,
+                start: formatDuration(seg.start + timeOffset),
+                end: formatDuration(seg.end + timeOffset),
+                text: seg.text.trim(),
+                speaker: 'Speaker 1'
+              });
+            });
+          } else if (data.text) {
+            allSegments.push({
+              startSec: timeOffset,
+              endSec: timeOffset + (endSample - startSample) / sampleRate,
+              start: formatDuration(timeOffset),
+              end: formatDuration(timeOffset + (endSample - startSample) / sampleRate),
+              text: data.text.trim(),
+              speaker: 'Speaker 1'
+            });
+          }
+        }
+
+        const useSpeakers = document.getElementById('opt-speakers').checked;
+        if (useSpeakers && allSegments.length > 0) {
+          updateProgress(84, 'Identificando cambios de hablante...');
+          let currentSpk = 1;
+          for (let i = 0; i < allSegments.length; i++) {
+            if (i > 0 && (allSegments[i].startSec - allSegments[i - 1].endSec) > 1.8) {
+              currentSpk = currentSpk === 1 ? 2 : 1;
+            }
+            allSegments[i].speaker = `Speaker ${currentSpk}`;
+          }
+        }
+
+        let summaryObj = null;
+        if (document.getElementById('opt-summary').checked && allSegments.length > 0) {
+          updateProgress(92, 'Generando resumen ejecutivo e insights con IA...');
+          summaryObj = await generateRealSummary(allSegments, apiKey, provider);
+        }
+
+        updateProgress(100, '¡Transcripción completada!');
+
+        const procTime = ((performance.now() - t0) / 1000).toFixed(2);
+        const fullText = allSegments.map(s => s.text).join(' ');
+        const uniqueSpeakers = [...new Set(allSegments.map(s => s.speaker))];
+        const speakerMap = {};
+        uniqueSpeakers.forEach(s => { speakerMap[s] = s; });
+
+        const record = {
+          id: 'tr_' + Date.now(),
+          fileName: selectedFile.name,
+          duration: totalDuration,
+          model: modelName,
+          language: detectedLang.toUpperCase(),
+          processingTime: procTime,
+          showTimestamps: document.getElementById('opt-timestamps').checked,
+          createdAt: new Date().toLocaleDateString(),
+          speakerMap,
+          stats: {
+            words: fullText ? fullText.split(/\s+/).length : 0,
+            chars: fullText.length,
+            speakers: uniqueSpeakers.length
+          },
+          summary: summaryObj,
+          segments: allSegments
+        };
+
+        historyRecords.unshift(record);
+        saveHistory();
+        renderHistory();
+        openRecord(record.id);
+
+      } catch (err) {
+        showAlert(err.message || 'Ocurrió un error al transcribir el audio.');
+      } finally {
+        startBtn.disabled = false;
+        document.getElementById('start-btn-text').textContent = 'Transcribir Audio Real';
+      }
+    });
+
+    async function generateRealSummary(segments, apiKey, provider) {
+      const transcriptText = segments.map(s => `[${s.start}] ${s.speaker}: ${s.text}`).join('\n').slice(0, 24000);
+      const chatUrl = provider === 'groq'
+        ? 'https://api.groq.com/openai/v1/chat/completions'
+        : 'https://api.openai.com/v1/chat/completions';
+      const chatModel = provider === 'groq' ? 'llama-3.3-70b-versatile' : 'gpt-4o-mini';
+
+      try {
+        const res = await fetch(chatUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: chatModel,
+            response_format: { type: 'json_object' },
+            messages: [
+              {
+                role: 'system',
+                content: 'Analiza la transcripción y responde SOLO en JSON con las claves: executive (string), ideas (array de strings), actions (array de strings), decisions (array de strings), questions (array de strings). Usa el mismo idioma del audio.'
+              },
+              { role: 'user', content: transcriptText }
+            ]
+          })
+        });
+        const data = await res.json();
+        return JSON.parse(data.choices[0].message.content);
+      } catch {
+        return {
+          executive: segments.slice(0, 4).map(s => s.text).join(' '),
+          ideas: segments.slice(0, 3).map(s => s.text),
+          actions: [],
+          decisions: [],
+          questions: segments.filter(s => s.text.includes('?')).map(s => s.text).slice(0, 5)
+        };
+      }
+    }
+
+    function updateProgress(pct, label) {
+      document.getElementById('progress-label').textContent = label;
+      document.getElementById('progress-pct').textContent = `${pct}%`;
+      document.getElementById('progress-bar').style.width = `${pct}%`;
+      const filled = Math.round((pct / 100) * 20);
+      document.getElementById('progress-ascii').textContent = `${'█'.repeat(filled)}${'░'.repeat(20 - filled)} ${pct}%`;
+    }
+
+    // === RENDERIZADO Y EXPORTACIONES ===
+    function openRecord(id) {
+      const rec = historyRecords.find(r => r.id === id);
+      if (!rec) return;
+      currentRecord = rec;
+
+      document.getElementById('results-container').classList.remove('hidden');
+      document.getElementById('result-title').textContent = rec.fileName;
+      document.getElementById('result-subtitle').textContent = `Procesado el ${rec.createdAt}`;
+
+      const statItems = [
+        { label: 'Duración', value: formatDuration(rec.duration), icon: 'clock' },
+        { label: 'Idioma', value: rec.language, icon: 'globe' },
+        { label: 'Hablantes', value: rec.stats.speakers, icon: 'users' },
+        { label: 'Palabras', value: rec.stats.words.toLocaleString(), icon: 'file-text' },
+        { label: 'Caracteres', value: rec.stats.chars.toLocaleString(), icon: 'hash' },
+        { label: 'Tiempo Proceso', value: `${rec.processingTime}s`, icon: 'zap' },
+        { label: 'Modelo', value: rec.model, icon: 'cpu' }
+      ];
+
+      document.getElementById('stats-grid').innerHTML = statItems.map(s => `
+        <div class="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60">
+          <div class="flex items-center gap-1.5 text-[11px] text-zinc-500 dark:text-zinc-400">
+            <i data-lucide="${s.icon}" class="w-3.5 h-3.5 text-indigo-500"></i>
+            <span>${s.label}</span>
+          </div>
+          <div class="mt-1 text-sm font-semibold truncate">${s.value}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('speakers-inputs').innerHTML = Object.entries(rec.speakerMap).map(([orig, val]) => `
+        <div class="flex items-center gap-2 p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950">
+          <span class="text-xs font-mono text-zinc-500 shrink-0">${orig} →</span>
+          <input type="text" data-speaker-key="${orig}" value="${val}" class="speaker-rename-input w-full bg-transparent text-xs font-medium focus:outline-none" />
+        </div>
+      `).join('');
+
+      const summaryBox = document.getElementById('summary-box');
+      if (rec.summary && rec.summary.executive) {
+        summaryBox.classList.remove('hidden');
+        document.getElementById('exec-summary').textContent = rec.summary.executive;
+        const blocks = [
+          { title: 'Ideas principales', items: rec.summary.ideas || [], icon: 'lightbulb' },
+          { title: 'Tareas pendientes detectadas', items: rec.summary.actions || [], icon: 'check-square' },
+          { title: 'Decisiones tomadas', items: rec.summary.decisions || [], icon: 'gavel' },
+          { title: 'Preguntas realizadas', items: rec.summary.questions || [], icon: 'help-circle' }
+        ];
+        document.getElementById('summary-cards').innerHTML = blocks.filter(b => b.items.length > 0).map(b => `
+          <div class="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-2">
+            <div class="flex items-center gap-2 text-xs font-semibold">
+              <i data-lucide="${b.icon}" class="w-3.5 h-3.5 text-indigo-500"></i>
+              <span>${b.title}</span>
+            </div>
+            <ul class="space-y-1 text-xs text-zinc-600 dark:text-zinc-400 list-disc pl-4">
+              ${b.items.map(i => `<li>${i}</li>`).join('')}
+            </ul>
+          </div>
+        `).join('');
+      } else {
+        summaryBox.classList.add('hidden');
+      }
+
+      renderSegments();
+      renderHistory();
+      lucide.createIcons();
+    }
+
+    function applySpeakerNames() {
+      if (!currentRecord) return;
+      document.querySelectorAll('.speaker-rename-input').forEach(inp => {
+        const key = inp.getAttribute('data-speaker-key');
+        const val = inp.value.trim();
+        if (key && val) currentRecord.speakerMap[key] = val;
+      });
+      saveHistory();
+      renderSegments();
+    }
+
+    function renderSegments() {
+      if (!currentRecord) return;
+      const q = document.getElementById('search-input').value.toLowerCase();
+      const filtered = currentRecord.segments.filter(s => {
+        const spk = currentRecord.speakerMap[s.speaker] || s.speaker;
+        return s.text.toLowerCase().includes(q) || spk.toLowerCase().includes(q);
+      });
+
+      document.getElementById('segments-count').textContent = `Transcripción (${filtered.length} segmentos)`;
+      document.getElementById('segments-list').innerHTML = filtered.map(s => {
+        const spk = currentRecord.speakerMap[s.speaker] || s.speaker;
+        return `
+          <div class="pt-4 first:pt-0 space-y-1">
+            ${currentRecord.showTimestamps ? `<div class="font-mono text-xs text-zinc-500">[${s.start} - ${s.end}]</div>` : ''}
+            <div class="text-xs font-semibold text-indigo-600 dark:text-indigo-400">${spk}</div>
+            <p class="text-sm leading-relaxed text-zinc-800 dark:text-zinc-200">${s.text}</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function getFormattedPlainText(rec) {
+      return rec.segments.map(s => {
+        const spk = rec.speakerMap[s.speaker] || s.speaker;
+        return `[${s.start} - ${s.end}]\n${spk}\n${s.text}\n--------------------------------`;
+      }).join('\n');
+    }
+
+    async function copyTranscript() {
+      if (!currentRecord) return;
+      await navigator.clipboard.writeText(getFormattedPlainText(currentRecord));
+      const btnText = document.getElementById('copy-btn-text');
+      btnText.textContent = '¡Copiado!';
+      setTimeout(() => { btnText.textContent = 'Copiar texto'; }, 2000);
+    }
+
+    function exportData(format, recordOverride = null) {
+      const rec = recordOverride || currentRecord;
+      if (!rec) return;
+      const baseName = rec.fileName.replace(/\.[^/.]+$/, '');
+      let content = '';
+      let mime = 'text/plain;charset=utf-8';
+
+      if (format === 'txt') {
+        content = getFormattedPlainText(rec);
+      } else if (format === 'json') {
+        mime = 'application/json;charset=utf-8';
+        content = JSON.stringify({
+          file_name: rec.fileName,
+          model: rec.model,
+          language: rec.language,
+          stats: rec.stats,
+          summary: rec.summary,
+          segments: rec.segments.map(s => ({
+            speaker: rec.speakerMap[s.speaker] || s.speaker,
+            start: s.start,
+            end: s.end,
+            text: s.text
+          }))
+        }, null, 2);
+      } else if (format === 'srt') {
+        content = rec.segments.map((s, i) => {
+          const spk = rec.speakerMap[s.speaker] || s.speaker;
+          return `${i + 1}\n${s.start},000 --> ${s.end},000\n[${spk}] ${s.text}\n`;
+        }).join('\n');
+      } else if (format === 'vtt') {
+        content = 'WEBVTT\n\n' + rec.segments.map((s, i) => {
+          const spk = rec.speakerMap[s.speaker] || s.speaker;
+          return `${i + 1}\n${s.start}.000 --> ${s.end}.000\n<v ${spk}>${s.text}\n`;
+        }).join('\n');
+      } else if (format === 'docx') {
+        mime = 'application/msword';
+        content = `<html><head><meta charset="utf-8"></head><body><h1>${rec.fileName}</h1><pre>${getFormattedPlainText(rec)}</pre></body></html>`;
+      }
+
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${baseName}.${format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('history-list');
+      if (historyRecords.length === 0) {
+        list.innerHTML = `<p class="text-xs text-zinc-500 text-center py-6">Aún no has transcrito ningún audio.</p>`;
+        return;
+      }
+
+      list.innerHTML = historyRecords.map(item => `
+        <div onclick="openRecord('${item.id}')" class="p-3 rounded-xl border cursor-pointer transition space-y-2 ${
+          currentRecord?.id === item.id
+            ? 'border-indigo-500 bg-indigo-500/10'
+            : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900'
+        }">
+          <div class="flex items-start justify-between gap-2">
+            <span class="text-xs font-medium truncate">${item.fileName}</span>
+            <div class="flex items-center gap-1 shrink-0" onclick="event.stopPropagation()">
+              <button title="Exportar TXT" onclick="exportById('${item.id}')" class="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-500">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              </button>
+              <button title="Eliminar" onclick="deleteRecord('${item.id}')" class="p-1 rounded hover:bg-red-500/10 text-zinc-500 hover:text-red-500">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+          <div class="flex items-center justify-between text-[11px] text-zinc-500">
+            <span>${formatDuration(item.duration)}</span>
+            <span class="uppercase font-mono">${item.model}</span>
+            <span>${item.createdAt}</span>
+          </div>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function exportById(id) {
+      const rec = historyRecords.find(r => r.id === id);
+      if (rec) exportData('txt', rec);
+    }
+
+    function deleteRecord(id) {
+      historyRecords = historyRecords.filter(r => r.id !== id);
+      saveHistory();
+      if (currentRecord?.id === id) {
+        currentRecord = null;
+        document.getElementById('results-container').classList.add('hidden');
+      }
+      renderHistory();
+    }
+
+    function saveHistory() {
+      localStorage.setItem('ai_transcriber_real_history', JSON.stringify(historyRecords));
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+    }
+
+    function formatDuration(sec) {
+      const total = Math.max(0, Math.floor(sec));
+      const h = String(Math.floor(total / 3600)).padStart(2, '0');
+      const m = String(Math.floor((total % 3600) / 60)).padStart(2, '0');
+      const s = String(total % 60).padStart(2, '0');
+      return `${h}:${m}:${s}`;
+    }
+
+    function showAlert(msg) {
+      document.getElementById('global-alert-text').textContent = msg;
+      document.getElementById('global-alert').classList.remove('hidden');
+    }
+
+    function hideAlert() {
+      document.getElementById('global-alert').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
